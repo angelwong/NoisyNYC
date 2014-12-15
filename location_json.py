@@ -3,18 +3,26 @@ import os
 import json
 import glob
 import string
-from operator import itemgetter
 
 # create data frame to capture top venues for each location
 df_ = pd.DataFrame()
 
 
-# pulls top 5 venues for each json file
+# pulls names of top 5 venues for each json file
 def top_venues(json_data):
 	venue_array = json_data['response']['venues']
 	range_i = range(len(json_data['response']['venues']))
-	venue_i_array = [(venue_array[i]['name'].encode('ascii', 'ignore'),int(venue_array[i]['stats']['checkinsCount'])) for i in range_i]
-	venue_i_array = sorted(venue_i_array, key=itemgetter(1), reverse=True)
+	venue_i_array = []
+	for i in range_i:
+		venue_name = venue_array[i]['name'].encode('ascii', 'ignore');
+		venue_count = int(venue_array[i]['stats']['checkinsCount'])
+		venue_categories = venue_array[i]['categories']
+		venue_type = ""
+		if venue_categories:
+			venue_type = venue_categories.pop()['name'].encode('ascii', 'ignore');
+		venue_tuple = (venue_name, venue_count, venue_type)
+		venue_i_array.append(venue_tuple)
+	venue_i_array = sorted(venue_i_array, key=lambda tup: tup[1], reverse=True)
 	return venue_i_array[0:5]
 
 # imports noisy locations csv to dataframe
@@ -28,8 +36,6 @@ for i in range(csv['Latitude'].count()):
 
 csv['Latitude'] = [round(csv['Latitude'][i], 6) for i in range(len(csv['Latitude']))]
 csv['Longitude'] = [round(csv['Longitude'][i], 6) for i in range(len(csv['Longitude']))]
-
-
 
 # read each file
 path = "C:\Users\Angel\Documents\Coursera\Noise\locations"
